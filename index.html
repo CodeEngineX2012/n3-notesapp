@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>N3 Notes</title>
+  <meta name="theme-color" content="#0f172a" />
+  <link rel="icon" href="favicon.png" type="image/x-icon" />
+  <style>
+    :root {
+      --bg: #0b1020;
+      --bg-soft: #0f172a;
+      --glass: rgba(255,255,255,0.06);
+      --text: #e5e7eb;
+      --muted: #9aa4b2;
+      --brand1: #7c3aed;
+      --brand2: #06b6d4;
+      --accent: #22c55e;
+      --warn: #ef4444;
+      --ring: #a78bfa;
+      --card: rgba(17, 24, 39, 0.7);
+      --shadow: 0 10px 30px rgba(0,0,0,.35);
+      --radius-xl: 22px;
+    }
+    @media (prefers-color-scheme: light) {
+      :root {
+        --bg: #f8fafc;
+        --bg-soft: #f1f5f9;
+        --glass: rgba(0,0,0,0.04);
+        --text: #0f172a;
+        --muted: #475569;
+        --card: rgba(255,255,255,0.85);
+        --shadow: 0 10px 26px rgba(2,6,23,.08);
+      }
+    }
+    [data-theme="dark"] {
+      --bg: #0b1020; --bg-soft:#0f172a; --glass: rgba(255,255,255,0.06);
+      --text:#e5e7eb; --muted:#9aa4b2; --card: rgba(17,24,39,.7); --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    [data-theme="light"] {
+      --bg: #f8fafc; --bg-soft:#f1f5f9; --glass: rgba(0,0,0,0.04);
+      --text:#0f172a; --muted:#475569; --card: rgba(255,255,255,.85); --shadow:0 10px 26px rgba(2,6,23,.08);
+    }
+
+    * { box-sizing: border-box; }
+    html, body { height: 100%; }
+    body {
+      margin: 0;
+      font: 16px/1.4 system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, sans-serif;
+      color: var(--text);
+      background: radial-gradient(1200px 800px at 10% -10%, rgba(124, 58, 237, .18), transparent 60%),
+                  radial-gradient(1200px 800px at 110% 10%, rgba(6, 182, 212, .17), transparent 60%),
+                  var(--bg);
+      overflow: hidden;
+    }
+
+    .app { display: grid; grid-template-rows: auto 1fr; height: 100dvh; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
+    header {
+      position: sticky; top: 0; z-index: 10;
+      display: flex; gap: 10px; align-items: center; justify-content: space-between;
+      padding: 14px 18px;
+      background: linear-gradient(180deg, rgba(2,6,23,.5), rgba(2,6,23,0));
+      backdrop-filter: blur(10px);
+    }
+
+    .brand { display: flex; align-items: center; gap: 12px; font-weight: 700; letter-spacing: 0.3px; }
+    .logo { width: 36px; height: 36px; border-radius: 12px; position: relative; overflow: hidden; box-shadow: var(--shadow); background: conic-gradient(from 0deg, var(--brand1), var(--brand2), var(--brand1)); animation: spinSlow 8s linear infinite; }
+    @keyframes spinSlow { to { transform: rotate(360deg); } }
+
+    .search {
+      flex: 1; max-width: 680px; display: flex; align-items: center; gap: 10px;
+      background: var(--card); border: 1px solid rgba(255,255,255,.06);
+      padding: 10px 12px; border-radius: 14px; backdrop-filter: blur(8px);
+      box-shadow: var(--shadow);
+    }
+    .search input { flex: 1; border: none; outline: none; background: transparent; color: var(--text); font-size: 15px; }
+
+    .toolbar { display: flex; gap: 10px; align-items: center; }
+    .btn { cursor: pointer; border: 1px solid rgba(255,255,255,.08); background: var(--card); color: var(--text); padding: 10px 14px; border-radius: 12px; backdrop-filter: blur(8px); box-shadow: var(--shadow); transition: .2s transform, .2s filter; }
+    .btn:hover { transform: translateY(-1px); filter: saturate(1.1); }
+
+    .grid { height: calc(100dvh - 76px); overflow: auto; padding: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 16px; }
+
+    .card { position: relative; background: var(--card); border: 1px solid rgba(255,255,255,.06); border-radius: var(--radius-xl); padding: 16px 14px 48px; box-shadow: var(--shadow); backdrop-filter: blur(10px); min-height: 140px; display: flex; flex-direction: column; gap: 8px; animation: popIn .4s ease; }
+    @keyframes popIn { from { transform: translateY(6px) scale(.98); opacity: 0; } }
+    .card[draggable="true"] { cursor: grab; }
+    .card.dragging { opacity: .6; transform: scale(.98); }
+    .card h3 { margin: 0; font-size: 16px; font-weight: 700; }
+    .card p { margin: 0; color: var(--muted); white-space: pre-wrap; }
+    .meta { margin-top: auto; display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12px; color: var(--muted); }
+    .chip { padding: 4px 8px; border-radius: 999px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.08); }
+    .card-actions { position: absolute; right: 10px; bottom: 10px; display: flex; gap: 6px; }
+    .icon-btn { width: 36px; height: 36px; border-radius: 12px; border: 1px solid rgba(255,255,255,.08); background: var(--glass); display: grid; place-items: center; cursor: pointer; transition:.2s; }
+    .icon-btn:hover { transform: translateY(-2px); }
+
+    .fab { position: fixed; right: 22px; bottom: 26px; z-index: 20; display: grid; place-items: center; width: 64px; height: 64px; border-radius: 20px; background: radial-gradient(circle at 30% 30%, var(--brand2), transparent 40%), radial-gradient(circle at 70% 70%, var(--brand1), transparent 40%), linear-gradient(135deg, var(--brand1), var(--brand2)); color: white; box-shadow: 0 15px 40px rgba(124,58,237,.35); border: 0; cursor: pointer; transition: .25s transform; }
+    .fab:hover { transform: translateY(-3px) scale(1.02); }
+
+    .modal { position: fixed; inset: 0; background: rgba(2,6,23,.6); display: none; align-items: center; justify-content: center; padding: 20px; z-index: 30; animation: fadeIn .2s ease; }
+    .modal.open { display: flex; }
+    @keyframes fadeIn { from { opacity: 0; } }
+    .sheet { width: min(880px, 96vw); max-height: 86vh; overflow: auto; background: var(--card); border: 1px solid rgba(255,255,255,.08); border-radius: 24px; padding: 18px; box-shadow: var(--shadow); animation: rise .25s ease; }
+    @keyframes rise { from { transform: translateY(10px) scale(.98); opacity: 0; } }
+    .sheet .row { display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: center; }
+    .sheet input, .sheet textarea, .sheet select { width: 100%; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: var(--text); padding: 12px 14px; border-radius: 12px; outline: 2px solid transparent; transition: .2s; }
+    .sheet input:focus, .sheet textarea:focus, .sheet select:focus { outline: 2px solid var(--ring); }
+    .sheet textarea { min-height: 220px; resize: vertical; }
+    .colors { display: flex; gap: 8px; flex-wrap: wrap; }
+    .swatch { width: 26px; height: 26px; border-radius: 999px; border: 2px solid rgba(255,255,255,.4); cursor: pointer; box-shadow: var(--shadow); }
+    .danger { color: #fff; background: linear-gradient(135deg, #ef4444, #f97316); border: 0; }
+    .primary { color: #0b1020; background: linear-gradient(135deg, #a78bfa, #22d3ee); border: 0; }
+    .empty { height: 60vh; display: grid; place-items: center; text-align: center; opacity: .75; background: repeating-conic-gradient(from 0deg, transparent 0 15deg, rgba(255,255,255,.02) 15deg 30deg); border-radius: 24px; border: 1px dashed rgba(255,255,255,.08); }
+    .toast { position: fixed; left: 50%; bottom: 16px; transform: translateX(-50%); background: var(--card); border: 1px solid rgba(255,255,255,.08); padding: 10px 14px; border-radius: 999px; box-shadow: var(--shadow); display: none; }
+    .toast.show { display: inline-block; animation: popIn .25s ease; }
+    .hidden { display: none !important; }
+    .pin { color: gold; }
+    .nowrap { white-space: nowrap; }
+    footer { text-align:center; padding:14px; font-size:12px; color:var(--muted); }
+  </style>
+</head>
+<body>
+  <div id="app" class="app" data-theme="dark">
+    <header>
+      <div class="brand">
+        <div class="logo" aria-hidden="true"></div>
+        <div>
+          <div style="font-weight:800; font-size:18px; letter-spacing:.4px;">N3 Notes</div>
+          <div style="font-size:12px; color:var(--muted);">Fast • Animated • Offline</div>
+        </div>
+      </div>
+      <div class="search" role="search">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        <input id="q" placeholder="Search notes ( / )" aria-label="Search notes" />
+      </div>
+      <div class="toolbar">
+        <button id="themeBtn" class="btn" title="Toggle theme (T)">Theme</button>
+        <button id="exportBtn" class="btn" title="Export notes">Export</button>
+        <label class="btn" for="importFile" title="Import notes">Import</label>
+        <input id="importFile" type="file" accept="application/json" class="hidden" />
+      </div>
+    </header>
+
+    <main id="grid" class="grid" aria-live="polite"></main>
+
+    <button id="createBtn" class="fab" title="New note (N)">
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+    </button>
+    <footer>© N3 by &copy; <a href="https://skyzenlabs.netlify.app">Skyzen Labs"</a></footer>
+  </div>
+
+  <!-- Composer Modal -->
+  <div id="modal" class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+    <div class="sheet">
+      <div class="row" style="margin-bottom:10px;">
+        <input id="title" placeholder="Title" aria-label="Note title" />
+        <select id="priority" aria-label="Priority">
+          <option value="normal">Normal</option>
+          <option value="high">High</option>
+          <option value="low">Low</option>
+        </select>
+      </div>
+      <textarea id="content" placeholder="Write your note…" aria-label="Note content"></textarea>
+      <div style="display:flex; gap:12px; align-items:center; justify-content:space-between; margin-top:12px; flex-wrap:wrap;">
+        <div class="colors" id="colorChoices" aria-label="Choose color"></div>
+        <div style="display:flex; gap:10px;">
+          <button id="deleteBtn" class="btn danger hidden">Delete</button>
+          <button id="saveBtn" class="btn primary">Save</button>
+          <button id="closeBtn" class="btn">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast" role="status" aria-live="polite">Saved</div>
+
+  <script>
+    const $ = (sel, el=document) => el.querySelector(sel);
+    const $$ = (sel, el=document) => Array.from(el.querySelectorAll(sel));
+    const uid = () => Math.random().toString(36).slice(2) + Date.now().toString(36);
+
+    const COLORS = [
+      ['Default', '#64748b'], ['Sunset', '#f97316'], ['Rose', '#ef4444'], ['Lime', '#84cc16'],
+      ['Sky', '#06b6d4'], ['Violet', '#8b5cf6'], ['Amber', '#f59e0b'], ['Emerald', '#10b981']
+    ];
+
+    const store = {
+      get k(){ return 'nimbus-notes-v1'; },
+      get s(){ return JSON.parse(localStorage.getItem(this.k) || '{"notes":[],"order":[],"theme":"auto"}'); },
+      set s(v){ localStorage.setItem(this.k, JSON.stringify(v)); },
+      load(){ this.cache = this.s; return this.cache; },
+      save(){ this.s = this.cache; },
+      cache: null
+    };
+
+    const state = { editing: null, query: '', dragSrcId: null };
+
+    function timeAgo(ts){
+      const d = Date.now() - ts; const m = 60e3, h = 3600e3, day = 86400e3;
+      if (d < m) return 'just now';
+      if (d < h) return Math.floor(d/m)+'m ago';
+      if (d < day) return Math.floor(d/h)+'h ago';
+      const dt = new Date(ts); return dt.toLocaleDateString();
+    }
+
+    function showToast(msg){
+      const el = $('#toast'); el.textContent = msg; el.classList.add('show');
+      setTimeout(()=> el.classList.remove('show'), 1400);
+    }
+
+    function applyTheme(pref){
+      const root = $('#app');
+      if (pref === 'auto') root.dataset.theme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark':'light';
+      else root.dataset.theme = pref;
+      const meta = document.querySelector('meta[name="theme-color"]');
+      meta.setAttribute('content', getComputedStyle(document.body).getPropertyValue('--bg').trim());
+    }
+
+    function renderColors(selected){
+      const wrap = $('#colorChoices'); wrap.innerHTML='';
+      COLORS.forEach(([name, color])=>{
+        const sw = document.createElement('button'); sw.className='swatch'; sw.style.background=color; sw.title=name;
+        sw.setAttribute('data-color', color);
+        if(selected===color) sw.style.outline='3px solid var(--ring)';
+        sw.addEventListener('click', ()=>{
+          $$('.swatch').forEach(x=>x.style.outline='none');
+          sw.style.outline='3px solid var(--ring)';
+          $('#content').dataset.color=color;
+        });
+        wrap.appendChild(sw);
+      });
+    }
+
+    function render(){
+      const { notes, order } = store.cache;
+      const grid = $('#grid'); grid.innerHTML='';
+      const sorted = order.map(id=>notes.find(n=>n.id===id)).filter(Boolean);
+      const filtered = state.query ? sorted.filter(n=>(n.title+n.content).toLowerCase().includes(state.query)) : sorted;
+      if(!filtered.length){
+        const empty = document.createElement('div'); empty.className='empty';
+        empty.innerHTML='<div><h2 style="margin:0 0 6px;">No notes yet</h2><div style="color:var(--muted)">Click the + button or press N to create one.</div></div>';
+        grid.appendChild(empty); return;
+      }
+      filtered.forEach(n=>grid.appendChild(noteCard(n)));
+    }
+
+    function noteCard(n){
+      const card=document.createElement('article'); card.className='card'; card.draggable=true; card.dataset.id=n.id;
+      card.style.borderTop=`4px solid ${n.color||'#64748b'}`;
+      card.innerHTML=`<h3>${escapeHtml(n.title||'Untitled')}</h3><p>${escapeHtml(n.content).slice(0,500)}</p>
+      <div class="meta"><span class="chip nowrap" title="Priority">${n.priority||'normal'}</span>
+      <span>${n.pinned?'📌 Pinned · ':''}${timeAgo(n.updatedAt)}</span></div>
+      <div class="card-actions">
+        <button class="icon-btn" data-act="pin" title="Pin"><span>📌</span></button>
+        <button class="icon-btn" data-act="edit" title="Edit"><span>✏️</span></button>
+        <button class="icon-btn" data-act="del" title="Delete"><span>🗑</span></button>
+      </div>`;
+      card.addEventListener('click',(e)=>{
+        const act=e.target.closest('[data-act]')?.dataset.act;
+        if(!act) return openEditor(n.id);
+        if(act==='edit') openEditor(n.id);
+        if(act==='pin') togglePin(n.id);
+        if(act==='del') removeNote(n.id);
+        e.stopPropagation();
+      });
+      card.addEventListener('dragstart',(e)=>{state.dragSrcId=n.id; card.classList.add('dragging'); e.dataTransfer.effectAllowed='move';});
+      card.addEventListener('dragend',()=>card.classList.remove('dragging'));
+      card.addEventListener('dragover',(e)=>e.preventDefault());
+      card.addEventListener('drop',(e)=>{e.preventDefault(); swapNotes(state.dragSrcId,n.id); state.dragSrcId=null;});
+      return card;
+    }
+
+    function swapNotes(a,b){
+      const o=store.cache.order, ia=o.indexOf(a), ib=o.indexOf(b);
+      [o[ia], o[ib]]=[o[ib], o[ia]]; store.save(); render();
+    }
+
+    function togglePin(id){
+      const n=store.cache.notes.find(n=>n.id===id); n.pinned=!n.pinned;
+      store.save(); render(); showToast(n.pinned?'Pinned':'Unpinned');
+    }
+
+    function openEditor(id=null){
+      state.editing=id;
+      const modal = $('#modal'); modal.classList.add('open');
+      const note = store.cache.notes.find(n=>n.id===id) || {};
+      $('#title').value=note.title||'';
+      $('#content').value=note.content||'';
+      $('#content').dataset.color=note.color||'#64748b';
+      $('#priority').value=note.priority||'normal';
+      renderColors(note.color||'#64748b');
+      if(id) $('#deleteBtn').classList.remove('hidden'); else $('#deleteBtn').classList.add('hidden');
+      setTimeout(()=>$('#title').focus(),50);
+    }
+
+    function closeEditor(){ $('#modal').classList.remove('open'); state.editing=null; }
+
+    function saveNote(){
+      const t=$('#title').value.trim(), c=$('#content').value.trim(), p=$('#priority').value, col=$('#content').dataset.color||'#64748b';
+      if(!t && !c){ closeEditor(); return; }
+      const now=Date.now();
+      if(state.editing){
+        const n=store.cache.notes.find(n=>n.id===state.editing);
+        n.title=t; n.content=c; n.priority=p; n.color=col; n.updatedAt=now;
+      } else {
+        const n={id:uid(),title:t,content:c,priority:p,color:col,createdAt:now,updatedAt:now,pinned:false};
+        store.cache.notes.push(n); store.cache.order.unshift(n.id);
+      }
+      store.save(); render(); closeEditor(); showToast('Saved');
+    }
+
+    function removeNote(id){
+      if(!confirm('Delete this note?')) return;
+      store.cache.notes=store.cache.notes.filter(n=>n.id!==id);
+      store.cache.order=store.cache.order.filter(x=>x!==id);
+      store.save(); render(); showToast('Deleted');
+    }
+
+    function escapeHtml(str){ return str.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
+    $('#createBtn').addEventListener('click',()=>openEditor());
+    $('#closeBtn').addEventListener('click',closeEditor);
+    $('#saveBtn').addEventListener('click',saveNote);
+    $('#deleteBtn').addEventListener('click',()=>{ removeNote(state.editing); closeEditor(); });
+    $('#themeBtn').addEventListener('click',()=>{
+      const t = $('#app').dataset.theme==='dark' ? 'light':'dark';
+      applyTheme(t); store.cache.theme=t; store.save();
+    });
+    $('#q').addEventListener('input', e=>{ state.query=e.target.value.toLowerCase(); render(); });
+    document.addEventListener('keydown', e=>{
+      if(e.key==='n' && !state.editing){ openEditor(); e.preventDefault(); }
+      if(e.key==='t'){ $('#themeBtn').click(); }
+    });
+
+    $('#exportBtn').addEventListener('click', ()=>{
+      const blob=new Blob([JSON.stringify(store.cache)],{type:'application/json'});
+      const a=document.createElement('a'); a.href=URL.createObjectURL(blob); a.download='notes.json'; a.click();
+    });
+
+    $('#importFile').addEventListener('change', e=>{
+      const file=e.target.files[0]; if(!file) return;
+      const reader=new FileReader();
+      reader.onload=()=>{ try { const imp=JSON.parse(reader.result); if(imp.notes){ store.cache=imp; store.save(); render(); showToast('Imported'); } else throw ''; } catch(err){ alert('Invalid file'); } e.target.value=''; };
+      reader.readAsText(file);
+    });
+
+    // init
+    store.load(); applyTheme(store.cache.theme||'auto'); render();
+  </script>
+</body>
+</html>
